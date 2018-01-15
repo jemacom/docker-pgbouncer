@@ -1,7 +1,7 @@
 FROM buildpack-deps:jessie-curl
 MAINTAINER Hans Kristian Flaatten <hans@starefossen.com>
 
-EXPOSE 5432
+EXPOSE 6432
 
 # Make a dedicated user
 RUN groupadd -r pgbouncer && useradd -r -g pgbouncer pgbouncer

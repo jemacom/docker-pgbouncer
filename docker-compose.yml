@@ -1,12 +1,54 @@
-postgres:
-  image: postgres:9.4
-  ports:
-    - "5432"
+version: '2'
 
-bouncer:
-  build: .
-  links:
-    - postgres
-  ports:
-    - "5432"
+services:
+  pg-master:
+    build:
+      context: postgres/
+    image: 'danieldent/postgres-replication'
+    restart: 'always'
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+      PGDATA: '/var/lib/postgresql/data/pgdata'
+    volumes:
+     - '/var/lib/postgresql/data'
+    expose:
+     - '5432'
+    networks:
+      - dbcluster
 
+  pg-slave:
+    build:
+      context: postgres/
+    image: 'danieldent/postgres-replication'
+    restart: 'always'
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+      PGDATA: '/var/lib/postgresql/data/pgdata'
+      REPLICATE_FROM: 'pg-master'
+    volumes:
+     - '/var/lib/postgresql/data'
+    expose:
+     - '5432'
+    links:
+     - 'pg-master'
+    networks:
+      - dbcluster
+
+  bouncer:
+    build:
+      context: pgbouncer/
+    links:
+      - 'pg-master'
+    ports:
+      - "6432:6432"
+    networks:
+      - dbcluster
+    depends_on:
+      - pg-master
+
+networks:
+
+  dbcluster:
+     driver: bridge
